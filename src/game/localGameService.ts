@@ -171,6 +171,7 @@ function startBattle(state: GameState): BattleState {
     units: [...playerUnits, ...cpuUnits],
     selectedUid: playerUnits[0]?.uid ?? null,
     status: "active",
+    animation: null,
     log: [
       {
         id: crypto.randomUUID(),
@@ -192,6 +193,7 @@ function moveUnit(battle: BattleState, uid: string, pos: BoardPos): BattleState 
 
   return {
     ...battle,
+    animation: null,
     selectedUid: uid,
     units: battle.units.map((item) => (item.uid === uid ? { ...item, pos, moved: true } : item))
   };
@@ -233,6 +235,20 @@ function attackUnit(battle: BattleState, attackerUid: string, defenderUid: strin
 
   return {
     ...battle,
+    animation: {
+      id: crypto.randomUUID(),
+      type: "attack",
+      attackerUid,
+      defenderUid,
+      attackerSide: attacker.side,
+      defenderSide: defender.side,
+      attackerHero: attacker.hero,
+      defenderHero: defender.hero,
+      attackerFrom: attacker.pos,
+      defenderFrom: defender.pos,
+      damage,
+      ko
+    },
     units: nextUnits,
     selectedUid: nextUnits.find((item) => item.side === battle.phase && !item.acted)?.uid ?? null,
     log,
@@ -247,6 +263,7 @@ function waitUnit(battle: BattleState, uid: string): BattleState {
   }
   return {
     ...battle,
+    animation: null,
     units: battle.units.map((item) => (item.uid === uid ? { ...item, acted: true, moved: true } : item)),
     selectedUid: battle.units.find((item) => item.side === battle.phase && !item.acted && item.uid !== uid)?.uid ?? null,
     log: addLog(battle.log, `${unit.hero.name} waits.`, "info")
@@ -259,6 +276,7 @@ function runCpuPhase(battle: BattleState): BattleState {
     ...battle,
     phase: "cpu",
     selectedUid: null,
+    animation: null,
     units: battle.units.map((item) => ({ ...item, acted: false, moved: false })),
     log: addLog(battle.log, "CPU turn begins.", "info")
   };

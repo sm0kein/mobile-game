@@ -92,6 +92,21 @@ export type BattleLogEntry = {
   tone: "info" | "hit" | "ko" | "reward";
 };
 
+export type BattleAnimation = {
+  id: string;
+  type: "attack";
+  attackerUid: string;
+  defenderUid: string;
+  attackerSide: TeamSide;
+  defenderSide: TeamSide;
+  attackerHero: HeroDefinition;
+  defenderHero: HeroDefinition;
+  attackerFrom: BoardPos;
+  defenderFrom: BoardPos;
+  damage: number;
+  ko: boolean;
+};
+
 export type BattleState = {
   phase: TeamSide;
   turn: number;
@@ -99,4 +114,5 @@ export type BattleState = {
   selectedUid: string | null;
   log: BattleLogEntry[];
   status: "active" | "victory" | "defeat";
+  animation: BattleAnimation | null;
 };
