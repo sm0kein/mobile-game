@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   BadgeInfo,
   Coins,
@@ -21,7 +21,7 @@ import {
   localGameService,
   moveDistance
 } from "./game/localGameService";
-import type { BattleState, BattleUnit, BoardPos, GameState, HeroDefinition, HeroInstance } from "./game/types";
+import type { BattleAnimation, BattleState, BattleUnit, BoardPos, GameState, HeroDefinition, HeroInstance } from "./game/types";
 
 type Screen = "home" | "summon" | "heroes" | "battle";
 
@@ -256,6 +256,16 @@ function BattleScreen({
   onStart: () => void;
   onChange: (battle: BattleState) => void;
 }) {
+  const cpuTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cpuTimerRef.current !== null) {
+        window.clearTimeout(cpuTimerRef.current);
+      }
+    };
+  }, []);
+
   if (!battle) {
     return (
       <section className="empty-state">
@@ -269,16 +279,36 @@ function BattleScreen({
   const activeBattle = battle;
   const selected = activeBattle.units.find((unit) => unit.uid === activeBattle.selectedUid) ?? null;
   const committedUnit = activeBattle.units.find((unit) => unit.side === "player" && unit.moved && !unit.acted);
+  const awaitingCpu =
+    activeBattle.status === "active" &&
+    activeBattle.phase === "player" &&
+    activeBattle.animation?.attackerSide === "player";
 
   function finishPlayerAction(nextBattle: BattleState) {
+    if (cpuTimerRef.current !== null) {
+      window.clearTimeout(cpuTimerRef.current);
+      cpuTimerRef.current = null;
+    }
+
     if (nextBattle.status !== "active") {
       onChange(nextBattle);
       return;
     }
+
+    if (nextBattle.animation?.attackerSide === "player") {
+      onChange(nextBattle);
+      cpuTimerRef.current = window.setTimeout(() => {
+        onChange(localGameService.runCpuPhase(nextBattle));
+        cpuTimerRef.current = null;
+      }, 760);
+      return;
+    }
+
     onChange(localGameService.runCpuPhase(nextBattle));
   }
 
   function handleCell(pos: BoardPos) {
+    if (awaitingCpu) return;
     if (activeBattle.phase !== "player" || activeBattle.status !== "active") return;
     const unit = activeBattle.units.find((item) => item.pos.x === pos.x && item.pos.y === pos.y);
     const selectedUnit = activeBattle.units.find((item) => item.uid === activeBattle.selectedUid);
@@ -297,17 +327,10 @@ function BattleScreen({
     }
 
     if (!unit) {
-      onChange(localGameService.moveUnit(activeBattle, selectedUnit.uid, pos));
-    }
-  }
-
-  function endTurn() {
-    finishPlayerAction(activeBattle);
-  }
-
-  function waitSelected() {
-    if (activeBattle.selectedUid) {
-      finishPlayerAction(localGameService.waitUnit(activeBattle, activeBattle.selectedUid));
+      const nextBattle = localGameService.moveUnit(activeBattle, selectedUnit.uid, pos);
+      if (nextBattle !== activeBattle) {
+        finishPlayerAction(nextBattle);
+      }
     }
   }
 
@@ -321,14 +344,8 @@ function BattleScreen({
           </div>
           <div className={`phase-pill ${activeBattle.status}`}>{activeBattle.status}</div>
         </div>
-        <BattleBoard battle={activeBattle} selected={selected} onCell={handleCell} />
+        <BattleBoard battle={activeBattle} selected={selected} onCell={handleCell} locked={awaitingCpu} />
         <div className="battle-actions">
-          <button className="secondary-action" onClick={waitSelected} disabled={!selected || selected.acted || activeBattle.status !== "active"}>
-            Wait
-          </button>
-          <button className="primary-action" onClick={endTurn} disabled={activeBattle.status !== "active"}>
-            CPU Turn
-          </button>
           <button className="text-action" onClick={onStart}>
             <RotateCcw size={16} />
             New Trial
@@ -352,11 +369,13 @@ function BattleScreen({
 function BattleBoard({
   battle,
   selected,
-  onCell
+  onCell,
+  locked
 }: {
   battle: BattleState;
   selected: BattleUnit | null;
   onCell: (pos: BoardPos) => void;
+  locked: boolean;
 }) {
   const { width, height } = getBoardSize();
   const cells: BoardPos[] = [];
@@ -367,7 +386,7 @@ function BattleBoard({
   }
 
   return (
-    <div className="board" style={{ "--cols": width } as CSSProperties}>
+    <div className={`board ${locked ? "input-locked" : ""}`} style={{ "--cols": width, "--rows": height } as CSSProperties}>
       {cells.map((pos) => {
         const unit = battle.units.find((item) => item.pos.x === pos.x && item.pos.y === pos.y);
         const terrain = getTerrainAt(pos);
@@ -379,6 +398,7 @@ function BattleBoard({
             className={`cell terrain-${terrain} ${blocked ? "blocked" : ""} ${reachable ? "reachable" : ""} ${attackable ? "attackable" : ""}`}
             key={`${pos.x}-${pos.y}`}
             onClick={() => onCell(pos)}
+            disabled={locked}
             aria-label={`${terrain} tile ${pos.x},${pos.y}`}
           >
             <span className="terrain-mark" aria-hidden="true" />
@@ -386,22 +406,65 @@ function BattleBoard({
           </button>
         );
       })}
+      {battle.animation && <CombatCollision key={battle.animation.id} animation={battle.animation} />}
+    </div>
+  );
+}
+
+function CombatCollision({ animation }: { animation: BattleAnimation }) {
+  const dx = animation.defenderFrom.x - animation.attackerFrom.x;
+  const dy = animation.defenderFrom.y - animation.attackerFrom.y;
+  const attackerStyle = {
+    gridColumn: animation.attackerFrom.x + 1,
+    gridRow: animation.attackerFrom.y + 1,
+    "--tx": `${dx * 42}%`,
+    "--ty": `${dy * 42}%`,
+    "--tx-back": `${dx * 7}%`,
+    "--ty-back": `${dy * 7}%`
+  } as CSSProperties;
+  const defenderStyle = {
+    gridColumn: animation.defenderFrom.x + 1,
+    gridRow: animation.defenderFrom.y + 1,
+    "--rx": `${dx * -18}%`,
+    "--ry": `${dy * -18}%`
+  } as CSSProperties;
+  const impactStyle = {
+    gridColumn: animation.defenderFrom.x + 1,
+    gridRow: animation.defenderFrom.y + 1
+  } as CSSProperties;
+
+  return (
+    <div className="combat-collision" aria-hidden="true">
+      <div className={`combat-ghost ${animation.attackerSide} attacker`} style={attackerStyle}>
+        <img src={animation.attackerHero.portrait} alt="" />
+        <span>{heroInitials(animation.attackerHero)}</span>
+      </div>
+      <div className={`combat-ghost ${animation.defenderSide} defender ${animation.ko ? "ko" : ""}`} style={defenderStyle}>
+        <img src={animation.defenderHero.portrait} alt="" />
+        <span>{heroInitials(animation.defenderHero)}</span>
+      </div>
+      <div className={`impact-burst ${animation.ko ? "ko" : ""}`} style={impactStyle}>
+        <strong>-{animation.damage}</strong>
+      </div>
     </div>
   );
 }
 
 function UnitToken({ unit, selected }: { unit: BattleUnit; selected: boolean }) {
-  const initials = unit.hero.name.split(" ").map((part) => part[0]).join("");
   return (
     <div
       className={`unit-token portrait-token ${unit.side} ${selected ? "selected" : ""} ${elementClass[unit.hero.element]}`}
       title={unit.hero.name}
     >
       <img src={unit.hero.portrait} alt="" />
-      <span className="token-initials">{initials}</span>
+      <span className="token-initials">{heroInitials(unit.hero)}</span>
       <small>{unit.hp}</small>
     </div>
   );
+}
+
+function heroInitials(hero: HeroDefinition) {
+  return hero.name.split(" ").map((part) => part[0]).join("");
 }
 
 function UnitDetails({ unit }: { unit: BattleUnit }) {
