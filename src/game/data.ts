@@ -1,5 +1,7 @@
 import type { CreditPack, HeroDefinition } from "./types";
 
+const BATTLE_SPRITE_SHEET = "/assets/battle/hero-chibi-sprites.png";
+
 export const HEROES: HeroDefinition[] = [
   {
     id: "hero_aria_vale",
@@ -16,6 +18,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Radiant Lunge",
     colors: ["#ffd166", "#ef476f"],
     portrait: "/assets/heroes/aria-vale.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 0, row: 0 },
     stats: { hp: 34, atk: 21, spd: 24, def: 15, res: 12 }
   },
   {
@@ -33,6 +36,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Tideguard Stance",
     colors: ["#3a7d44", "#95d5b2"],
     portrait: "/assets/heroes/bronn-keel.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 1, row: 0 },
     stats: { hp: 42, atk: 23, spd: 8, def: 27, res: 14 }
   },
   {
@@ -50,6 +54,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Moonfracture",
     colors: ["#8ecae6", "#5e60ce"],
     portrait: "/assets/heroes/selene-voss.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 2, row: 0 },
     stats: { hp: 30, atk: 26, spd: 20, def: 8, res: 24 }
   },
   {
@@ -67,6 +72,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Parting Shot",
     colors: ["#06d6a0", "#118ab2"],
     portrait: "/assets/heroes/kaito-renn.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 3, row: 0 },
     stats: { hp: 33, atk: 22, spd: 23, def: 13, res: 12 }
   },
   {
@@ -84,6 +90,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Dawn Mending",
     colors: ["#f4a261", "#fefae0"],
     portrait: "/assets/heroes/mira-solace.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 0, row: 1 },
     stats: { hp: 31, atk: 17, spd: 17, def: 10, res: 25 }
   },
   {
@@ -101,6 +108,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Midnight Dive",
     colors: ["#7209b7", "#f72585"],
     portrait: "/assets/heroes/nyx-calder.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 1, row: 1 },
     stats: { hp: 32, atk: 24, spd: 27, def: 9, res: 18 }
   },
   {
@@ -118,6 +126,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Roadsplit Charge",
     colors: ["#2d6a4f", "#ffb703"],
     portrait: "/assets/heroes/toma-brask.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 2, row: 1 },
     stats: { hp: 36, atk: 22, spd: 18, def: 18, res: 8 }
   },
   {
@@ -135,6 +144,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Blackline Mark",
     colors: ["#272640", "#b8c0ff"],
     portrait: "/assets/heroes/iri-quill.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 3, row: 1 },
     stats: { hp: 32, atk: 19, spd: 25, def: 12, res: 16 }
   },
   {
@@ -152,6 +162,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Rootpulse",
     colors: ["#588157", "#dda15e"],
     portrait: "/assets/heroes/oren-thatch.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 0, row: 2 },
     stats: { hp: 39, atk: 21, spd: 19, def: 18, res: 17 }
   },
   {
@@ -169,6 +180,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Harmonic Flare",
     colors: ["#ff9e00", "#9d4edd"],
     portrait: "/assets/heroes/vela-nadir.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 1, row: 2 },
     stats: { hp: 31, atk: 23, spd: 21, def: 10, res: 22 }
   },
   {
@@ -186,6 +198,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Lockdown Volley",
     colors: ["#495057", "#f77f00"],
     portrait: "/assets/heroes/cass-rook.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 2, row: 2 },
     stats: { hp: 40, atk: 25, spd: 7, def: 25, res: 13 }
   },
   {
@@ -203,6 +216,7 @@ export const HEROES: HeroDefinition[] = [
     signature: "Stillwater Seal",
     colors: ["#48cae4", "#4361ee"],
     portrait: "/assets/heroes/edda-rune.png",
+    battleSprite: { src: BATTLE_SPRITE_SHEET, col: 3, row: 2 },
     stats: { hp: 30, atk: 20, spd: 16, def: 11, res: 23 }
   }
 ];

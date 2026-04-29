@@ -436,11 +436,11 @@ function CombatCollision({ animation }: { animation: BattleAnimation }) {
   return (
     <div className="combat-collision" aria-hidden="true">
       <div className={`combat-ghost ${animation.attackerSide} attacker`} style={attackerStyle}>
-        <img src={animation.attackerHero.portrait} alt="" />
+        <BattleSprite hero={animation.attackerHero} />
         <span>{heroInitials(animation.attackerHero)}</span>
       </div>
       <div className={`combat-ghost ${animation.defenderSide} defender ${animation.ko ? "ko" : ""}`} style={defenderStyle}>
-        <img src={animation.defenderHero.portrait} alt="" />
+        <BattleSprite hero={animation.defenderHero} />
         <span>{heroInitials(animation.defenderHero)}</span>
       </div>
       <div className={`impact-burst ${animation.ko ? "ko" : ""}`} style={impactStyle}>
@@ -451,15 +451,30 @@ function CombatCollision({ animation }: { animation: BattleAnimation }) {
 }
 
 function UnitToken({ unit, selected }: { unit: BattleUnit; selected: boolean }) {
+  const hpPercent = Math.max(0, Math.round((unit.hp / unit.maxHp) * 100));
   return (
     <div
-      className={`unit-token portrait-token ${unit.side} ${selected ? "selected" : ""} ${elementClass[unit.hero.element]}`}
+      className={`unit-token sprite-token ${unit.side} ${selected ? "selected" : ""} ${elementClass[unit.hero.element]}`}
+      style={{ "--hp": `${hpPercent}%`, "--a": unit.hero.colors[0], "--b": unit.hero.colors[1] } as CSSProperties}
       title={unit.hero.name}
     >
-      <img src={unit.hero.portrait} alt="" />
-      <span className="token-initials">{heroInitials(unit.hero)}</span>
+      <span className="token-badge">{heroInitials(unit.hero)}</span>
+      <BattleSprite hero={unit.hero} />
+      <span className="hp-rail" aria-hidden="true"><span /></span>
       <small>{unit.hp}</small>
     </div>
+  );
+}
+
+function BattleSprite({ hero }: { hero: HeroDefinition }) {
+  return (
+    <span
+      className="battle-sprite"
+      style={{
+        backgroundImage: `url(${hero.battleSprite.src})`,
+        backgroundPosition: `${(hero.battleSprite.col / 3) * 100}% ${(hero.battleSprite.row / 2) * 100}%`
+      } as CSSProperties}
+    />
   );
 }
 

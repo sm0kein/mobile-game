@@ -1229,6 +1229,7 @@ main {
   border-color: rgba(0, 0, 0, 0.38);
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.02);
+  overflow: visible;
   z-index: 1;
 }
 
@@ -1271,6 +1272,116 @@ main {
     rgba(75, 48, 104, 0.18);
 }
 
+.sprite-token {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+  transform: translateY(-4%);
+}
+
+.sprite-token::before,
+.sprite-token::after {
+  display: none;
+}
+
+.battle-sprite {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 160%;
+  height: 160%;
+  background-repeat: no-repeat;
+  background-size: 400% 300%;
+  filter:
+    drop-shadow(0 2px 0 rgba(255, 255, 255, 0.5))
+    drop-shadow(0 8px 6px rgba(0, 0, 0, 0.45));
+  transform: translateY(-18%);
+  transform-origin: 50% 82%;
+  pointer-events: none;
+}
+
+.sprite-token.cpu .battle-sprite {
+  filter:
+    drop-shadow(0 2px 0 rgba(255, 112, 139, 0.45))
+    drop-shadow(0 8px 6px rgba(0, 0, 0, 0.5))
+    saturate(0.88);
+}
+
+.sprite-token.selected .battle-sprite {
+  animation: selected-sprite-bob 1200ms ease-in-out infinite;
+  filter:
+    drop-shadow(0 0 0 #fff)
+    drop-shadow(0 0 6px rgba(255, 241, 168, 0.95))
+    drop-shadow(0 9px 7px rgba(0, 0, 0, 0.45));
+}
+
+.token-badge {
+  position: absolute !important;
+  z-index: 4;
+  top: 5px;
+  right: 7px;
+  left: auto;
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 4px;
+  padding: 0;
+  background: linear-gradient(180deg, var(--a), var(--b));
+  color: #fff;
+  font-size: 0;
+  font-weight: 1000;
+  line-height: 1.15;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.72);
+  transform: rotate(45deg);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.28);
+}
+
+.sprite-token.cpu .token-badge {
+  background: linear-gradient(180deg, #cc3651, #5f1f2e);
+}
+
+.hp-rail {
+  position: absolute;
+  z-index: 4;
+  right: 8%;
+  bottom: 5px;
+  left: 8%;
+  height: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(5, 14, 17, 0.86);
+  border-radius: 999px;
+  background: rgba(18, 16, 24, 0.8);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.hp-rail span {
+  display: block;
+  width: var(--hp);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #56e0ff, #8df0bd);
+}
+
+.sprite-token.cpu .hp-rail span {
+  background: linear-gradient(90deg, #ff637b, #ffbd69);
+}
+
+.sprite-token small {
+  z-index: 5;
+  right: 50%;
+  bottom: -9px;
+  min-width: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  padding: 0 5px;
+  background: rgba(10, 12, 18, 0.86);
+  font-size: 0.62rem;
+  line-height: 1.25;
+  transform: translateX(50%);
+}
+
 .combat-collision {
   position: absolute;
   z-index: 8;
@@ -1285,30 +1396,25 @@ main {
 .combat-ghost {
   position: relative;
   display: grid;
-  width: 88%;
-  height: 88%;
-  place-self: center;
-  place-items: center;
-  overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  border-radius: 50% 50% 44% 44%;
-  background: #171225;
-  box-shadow: 0 0 0 3px rgba(255, 209, 102, 0.2), 0 12px 24px rgba(0, 0, 0, 0.42);
-}
-
-.combat-ghost img {
-  position: absolute;
-  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  place-self: center;
+  place-items: center;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .combat-ghost::after {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.7));
-  content: "";
+  display: none;
+}
+
+.combat-ghost .battle-sprite {
+  width: 164%;
+  height: 164%;
+  transform: translateY(-20%);
 }
 
 .combat-ghost span {
@@ -1420,6 +1526,16 @@ main {
   100% {
     opacity: 0;
     transform: scale(1.55) rotate(10deg);
+  }
+}
+
+@keyframes selected-sprite-bob {
+  0%,
+  100% {
+    transform: translateY(-18%) scale(1);
+  }
+  50% {
+    transform: translateY(-25%) scale(1.04);
   }
 }
 
