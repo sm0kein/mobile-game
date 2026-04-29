@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
+  ArrowLeft,
   BadgeInfo,
   Coins,
   Flag,
@@ -244,6 +245,17 @@ function SummonScreen({ state, lastPack, onOpenPack }: { state: GameState; lastP
 }
 
 function HeroesScreen({ state }: { state: GameState }) {
+  const [selectedInstance, setSelectedInstance] = useState<HeroInstance | null>(null);
+
+  if (selectedInstance) {
+    return (
+      <HeroDetailsScreen
+        instance={selectedInstance}
+        onBack={() => setSelectedInstance(null)}
+      />
+    );
+  }
+
   return (
     <section className="stack">
       <div className="panel roster-summary">
@@ -252,9 +264,61 @@ function HeroesScreen({ state }: { state: GameState }) {
       </div>
       <div className="hero-grid">
         {state.roster.map((instance) => (
-          <HeroCard key={instance.instanceId} instance={instance} />
+          <HeroCard
+            key={instance.instanceId}
+            instance={instance}
+            onClick={() => setSelectedInstance(instance)}
+          />
         ))}
       </div>
+    </section>
+  );
+}
+
+function HeroDetailsScreen({ instance, onBack }: { instance: HeroInstance; onBack: () => void }) {
+  const hero = getHero(instance.heroId);
+  const rarityBonus = instance.rarity - 3;
+  const stats = {
+    hp: hero.stats.hp + rarityBonus * 3,
+    atk: hero.stats.atk + instance.rarity * 2,
+    spd: hero.stats.spd + rarityBonus,
+    def: hero.stats.def + rarityBonus,
+    res: hero.stats.res + rarityBonus
+  };
+
+  return (
+    <section className="hero-detail-screen">
+      <button className="text-action back-action" onClick={onBack}>
+        <ArrowLeft size={18} />
+        Back to roster
+      </button>
+      <article className="panel hero-detail-panel">
+        <div className="hero-detail-art" style={{ "--a": hero.colors[0], "--b": hero.colors[1] } as CSSProperties}>
+          <img src={hero.portrait} alt="" />
+          <span>{"★".repeat(instance.rarity)}</span>
+        </div>
+        <div className="hero-detail-copy">
+          <p className="eyebrow">{hero.faction}</p>
+          <h2>{hero.name}</h2>
+          <p className="hero-title">{hero.title}</p>
+          <div className="trait-row">
+            <span className={elementClass[hero.element]}>{hero.element}</span>
+            <span>{hero.weapon}</span>
+            <span>{hero.moveType}</span>
+            <span>{hero.rangeType}</span>
+          </div>
+          <p className="detail-signature">{hero.signature}</p>
+          <p className="muted">{hero.role}</p>
+        </div>
+        <div className="detail-stat-grid" aria-label={`${hero.name} stats`}>
+          <Stat label="HP" value={stats.hp} />
+          <Stat label="ATK" value={stats.atk} />
+          <Stat label="SPD" value={stats.spd} />
+          <Stat label="DEF" value={stats.def} />
+          <Stat label="RES" value={stats.res} />
+          <Stat label="LV" value={instance.level} />
+        </div>
+      </article>
     </section>
   );
 }
@@ -593,10 +657,10 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function HeroCard({ instance }: { instance: HeroInstance }) {
+function HeroCard({ instance, onClick }: { instance: HeroInstance; onClick?: () => void }) {
   const hero = getHero(instance.heroId);
-  return (
-    <article className="hero-card">
+  const content = (
+    <>
       <HeroPortrait hero={hero} rarity={instance.rarity} />
       <div className="hero-card-copy">
         <div>
@@ -610,6 +674,20 @@ function HeroCard({ instance }: { instance: HeroInstance }) {
         </div>
         <p className="signature">{hero.signature}</p>
       </div>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button className="hero-card hero-card-button" onClick={onClick} aria-label={`View ${hero.name} details`}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <article className="hero-card">
+      {content}
     </article>
   );
 }
