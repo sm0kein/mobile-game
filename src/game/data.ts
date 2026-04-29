@@ -1,0 +1,226 @@
+import type { CreditPack, HeroDefinition } from "./types";
+
+export const HEROES: HeroDefinition[] = [
+  {
+    id: "hero_aria_vale",
+    name: "Aria Vale",
+    title: "Dawn Sentinel",
+    faction: "Dawn Covenant",
+    element: "Solar",
+    moveType: "Infantry",
+    rangeType: "Melee",
+    damageType: "Physical",
+    weapon: "Sunsteel Blade",
+    rarityAvailability: [4, 5],
+    role: "Fast duelist",
+    signature: "Radiant Lunge",
+    colors: ["#ffd166", "#ef476f"],
+    portrait: "/assets/heroes/aria-vale.png",
+    stats: { hp: 34, atk: 21, spd: 24, def: 15, res: 12 }
+  },
+  {
+    id: "hero_bronn_keel",
+    name: "Bronn Keel",
+    title: "Harbor Bulwark",
+    faction: "Ironbound Freehold",
+    element: "Verdant",
+    moveType: "Armored",
+    rangeType: "Melee",
+    damageType: "Physical",
+    weapon: "Anchor Axe",
+    rarityAvailability: [3, 4],
+    role: "Defensive wall",
+    signature: "Tideguard Stance",
+    colors: ["#3a7d44", "#95d5b2"],
+    portrait: "/assets/heroes/bronn-keel.png",
+    stats: { hp: 42, atk: 23, spd: 8, def: 27, res: 14 }
+  },
+  {
+    id: "hero_selene_voss",
+    name: "Selene Voss",
+    title: "Mirror Astrologer",
+    faction: "Moon Archive",
+    element: "Lunar",
+    moveType: "Mystic",
+    rangeType: "Ranged",
+    damageType: "Magical",
+    weapon: "Glass-Moon Tome",
+    rarityAvailability: [5],
+    role: "Burst mage",
+    signature: "Moonfracture",
+    colors: ["#8ecae6", "#5e60ce"],
+    portrait: "/assets/heroes/selene-voss.png",
+    stats: { hp: 30, atk: 26, spd: 20, def: 8, res: 24 }
+  },
+  {
+    id: "hero_kaito_renn",
+    name: "Kaito Renn",
+    title: "Gale Courier",
+    faction: "Windstep Caravan",
+    element: "Neutral",
+    moveType: "Cavalry",
+    rangeType: "Ranged",
+    damageType: "Physical",
+    weapon: "Recurve Bow",
+    rarityAvailability: [4, 5],
+    role: "Mobile archer",
+    signature: "Parting Shot",
+    colors: ["#06d6a0", "#118ab2"],
+    portrait: "/assets/heroes/kaito-renn.png",
+    stats: { hp: 33, atk: 22, spd: 23, def: 13, res: 12 }
+  },
+  {
+    id: "hero_mira_solace",
+    name: "Mira Solace",
+    title: "Prism Medic",
+    faction: "Dawn Covenant",
+    element: "Solar",
+    moveType: "Infantry",
+    rangeType: "Ranged",
+    damageType: "Magical",
+    weapon: "Healing Prism",
+    rarityAvailability: [3, 4, 5],
+    role: "Healer support",
+    signature: "Dawn Mending",
+    colors: ["#f4a261", "#fefae0"],
+    portrait: "/assets/heroes/mira-solace.png",
+    stats: { hp: 31, atk: 17, spd: 17, def: 10, res: 25 }
+  },
+  {
+    id: "hero_nyx_calder",
+    name: "Nyx Calder",
+    title: "Velvet Eclipse",
+    faction: "Umbral Court",
+    element: "Lunar",
+    moveType: "Flying",
+    rangeType: "Melee",
+    damageType: "Magical",
+    weapon: "Shadow Talons",
+    rarityAvailability: [5],
+    role: "Flier assassin",
+    signature: "Midnight Dive",
+    colors: ["#7209b7", "#f72585"],
+    portrait: "/assets/heroes/nyx-calder.png",
+    stats: { hp: 32, atk: 24, spd: 27, def: 9, res: 18 }
+  },
+  {
+    id: "hero_toma_brask",
+    name: "Toma Brask",
+    title: "Roadbreaker",
+    faction: "Ironbound Freehold",
+    element: "Verdant",
+    moveType: "Cavalry",
+    rangeType: "Melee",
+    damageType: "Physical",
+    weapon: "Drill Lance",
+    rarityAvailability: [3, 4],
+    role: "Cavalry initiator",
+    signature: "Roadsplit Charge",
+    colors: ["#2d6a4f", "#ffb703"],
+    portrait: "/assets/heroes/toma-brask.png",
+    stats: { hp: 36, atk: 22, spd: 18, def: 18, res: 8 }
+  },
+  {
+    id: "hero_iri_quill",
+    name: "Iri Quill",
+    title: "Inkblade Informant",
+    faction: "Inkspire Guild",
+    element: "Neutral",
+    moveType: "Infantry",
+    rangeType: "Ranged",
+    damageType: "Physical",
+    weapon: "Needle Daggers",
+    rarityAvailability: [4],
+    role: "Debuffer scout",
+    signature: "Blackline Mark",
+    colors: ["#272640", "#b8c0ff"],
+    portrait: "/assets/heroes/iri-quill.png",
+    stats: { hp: 32, atk: 19, spd: 25, def: 12, res: 16 }
+  },
+  {
+    id: "hero_oren_thatch",
+    name: "Oren Thatch",
+    title: "Briarhand",
+    faction: "Wildroot Pact",
+    element: "Verdant",
+    moveType: "Infantry",
+    rangeType: "Melee",
+    damageType: "Hybrid",
+    weapon: "Living Gauntlets",
+    rarityAvailability: [4, 5],
+    role: "Self-healing brawler",
+    signature: "Rootpulse",
+    colors: ["#588157", "#dda15e"],
+    portrait: "/assets/heroes/oren-thatch.png",
+    stats: { hp: 39, atk: 21, spd: 19, def: 18, res: 17 }
+  },
+  {
+    id: "hero_vela_nadir",
+    name: "Vela Nadir",
+    title: "Comet Cantor",
+    faction: "Starfall Choir",
+    element: "Solar",
+    moveType: "Flying",
+    rangeType: "Ranged",
+    damageType: "Magical",
+    weapon: "Comet Lyre",
+    rarityAvailability: [5],
+    role: "Flying support mage",
+    signature: "Harmonic Flare",
+    colors: ["#ff9e00", "#9d4edd"],
+    portrait: "/assets/heroes/vela-nadir.png",
+    stats: { hp: 31, atk: 23, spd: 21, def: 10, res: 22 }
+  },
+  {
+    id: "hero_cass_rook",
+    name: "Cass Rook",
+    title: "Rampart Gunner",
+    faction: "Blackpowder League",
+    element: "Neutral",
+    moveType: "Armored",
+    rangeType: "Ranged",
+    damageType: "Physical",
+    weapon: "Hand Cannon",
+    rarityAvailability: [4, 5],
+    role: "Ranged tank",
+    signature: "Lockdown Volley",
+    colors: ["#495057", "#f77f00"],
+    portrait: "/assets/heroes/cass-rook.png",
+    stats: { hp: 40, atk: 25, spd: 7, def: 25, res: 13 }
+  },
+  {
+    id: "hero_edda_rune",
+    name: "Edda Rune",
+    title: "Frost Scribe",
+    faction: "Frostveil Seminary",
+    element: "Lunar",
+    moveType: "Mystic",
+    rangeType: "Ranged",
+    damageType: "Magical",
+    weapon: "Frost Sigils",
+    rarityAvailability: [3, 4],
+    role: "Control caster",
+    signature: "Stillwater Seal",
+    colors: ["#48cae4", "#4361ee"],
+    portrait: "/assets/heroes/edda-rune.png",
+    stats: { hp: 30, atk: 20, spd: 16, def: 11, res: 23 }
+  }
+];
+
+export const CREDIT_PACKS: CreditPack[] = [
+  { id: "credits_small", name: "Small Credit Pack", credits: 20, priceLabel: "Free" },
+  { id: "credits_medium", name: "Medium Credit Pack", credits: 100, priceLabel: "Free" },
+  { id: "credits_large", name: "Large Credit Pack", credits: 500, priceLabel: "Free" }
+];
+
+export const STARTER_HERO_IDS = ["hero_aria_vale", "hero_bronn_keel"];
+export const HERO_PACK_COST = 20;
+export const HEROES_PER_PACK = 5;
+
+export function getHero(heroId: string) {
+  const hero = HEROES.find((item) => item.id === heroId);
+  if (!hero) {
+    throw new Error(`Missing hero definition: ${heroId}`);
+  }
+  return hero;
+}
