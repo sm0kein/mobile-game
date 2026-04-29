@@ -21,6 +21,11 @@ export type HeroDefinition = {
   signature: string;
   colors: [string, string];
   portrait: string;
+  battleSprite: {
+    src: string;
+    col: number;
+    row: number;
+  };
   stats: {
     hp: number;
     atk: number;
