@@ -250,7 +250,7 @@ function attackUnit(battle: BattleState, attackerUid: string, defenderUid: strin
       ko
     },
     units: nextUnits,
-    selectedUid: nextUnits.find((item) => item.side === battle.phase && !item.acted)?.uid ?? null,
+    selectedUid: nextUnits.some(u => u.uid === battle.selectedUid) ? battle.selectedUid : nextUnits.find((item) => item.side === battle.phase && !item.acted)?.uid ?? null,
     log,
     status
   };
@@ -265,7 +265,7 @@ function waitUnit(battle: BattleState, uid: string): BattleState {
     ...battle,
     animation: null,
     units: battle.units.map((item) => (item.uid === uid ? { ...item, acted: true, moved: true } : item)),
-    selectedUid: battle.units.find((item) => item.side === battle.phase && !item.acted && item.uid !== uid)?.uid ?? null,
+    selectedUid: battle.units.some(u => u.uid === battle.selectedUid) ? battle.selectedUid : battle.units.find((item) => item.side === battle.phase && !item.acted && item.uid !== uid)?.uid ?? null,
     log: addLog(battle.log, `${unit.hero.name} waits.`, "info")
   };
 }
@@ -305,7 +305,9 @@ function runCpuPhase(battle: BattleState): BattleState {
     ...nextBattle,
     phase: "player",
     turn: nextBattle.turn + 1,
-    selectedUid: nextBattle.units.find((item) => item.side === "player")?.uid ?? null,
+    selectedUid: battle.selectedUid && nextBattle.units.some(u => u.uid === battle.selectedUid) 
+      ? battle.selectedUid 
+      : nextBattle.units.find((item) => item.side === "player")?.uid ?? null,
     units: nextBattle.units.map((item) => ({ ...item, acted: false, moved: false })),
     log: addLog(nextBattle.log, `Turn ${nextBattle.turn + 1}: player turn.`, "info")
   };

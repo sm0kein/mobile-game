@@ -322,7 +322,15 @@ function BattleScreen({
     if (!selectedUnit || selectedUnit.acted) return;
 
     if (unit && unit.side === "cpu") {
-      finishPlayerAction(localGameService.attackUnit(activeBattle, selectedUnit.uid, unit.uid));
+      const isAttackable = selectedUnit.side === "player" && distance(selectedUnit.pos, unit.pos) <= attackRange(selectedUnit);
+      if (isAttackable) {
+        const nextBattle = localGameService.attackUnit(activeBattle, selectedUnit.uid, unit.uid);
+        if (nextBattle !== activeBattle) {
+          finishPlayerAction(nextBattle);
+        }
+      } else {
+        onChange({ ...activeBattle, selectedUid: unit.uid });
+      }
       return;
     }
 
@@ -344,6 +352,7 @@ function BattleScreen({
           </div>
           <div className={`phase-pill ${activeBattle.status}`}>{activeBattle.status}</div>
         </div>
+        <UnitStatsBanner unit={selected} />
         <BattleBoard battle={activeBattle} selected={selected} onCell={handleCell} locked={awaitingCpu} />
         <div className="battle-actions">
           <button className="text-action" onClick={onStart}>
@@ -352,16 +361,6 @@ function BattleScreen({
           </button>
         </div>
       </div>
-
-      <aside className="panel battle-sidebar">
-        <PanelTitle icon={<Crosshair size={18} />} title="Selected" />
-        {selected ? <UnitDetails unit={selected} /> : <p className="muted">Select a player hero.</p>}
-        <div className="log">
-          {activeBattle.log.map((entry) => (
-            <p className={`log-line ${entry.tone}`} key={entry.id}>{entry.text}</p>
-          ))}
-        </div>
-      </aside>
     </section>
   );
 }
@@ -482,34 +481,52 @@ function heroInitials(hero: HeroDefinition) {
   return hero.name.split(" ").map((part) => part[0]).join("");
 }
 
-function UnitDetails({ unit }: { unit: BattleUnit }) {
+function UnitStatsBanner({ unit }: { unit: BattleUnit | null }) {
+  if (!unit) {
+    return <div className="unit-stats-banner empty" aria-hidden="true" />;
+  }
   const stats = getBattleStats(unit);
+  const hpPercent = Math.max(0, Math.round((unit.hp / unit.maxHp) * 100));
+
   return (
-    <div className="unit-details-wrap">
-      <div className="unit-details">
+    <div className="unit-stats-banner">
+      <div className="banner-left">
         <HeroPortrait hero={unit.hero} rarity={unit.rarity} />
-        <div>
-          <h3>{unit.hero.name}</h3>
-          <p>{unit.hero.title}</p>
-          <span>{unit.hp}/{unit.maxHp} HP</span>
+      </div>
+      <div className="banner-center">
+        <div className="banner-name-row">
+          <span className={`element-icon ${elementClass[unit.hero.element]}`} />
+          <span className="hero-name">{unit.hero.name}</span>
+          <span className="hero-lv">Lv. 1</span>
+        </div>
+        <div className="banner-hp-row">
+          <span className="hp-label">HP</span>
+          <div className="banner-hp-rail">
+            <div className="banner-hp-fill" style={{ width: `${hpPercent}%` }} />
+            <span className="hp-text">{unit.hp} / {unit.maxHp}</span>
+          </div>
+        </div>
+        <div className="banner-stats-grid">
+          <div className="stat-compact"><span>Atk</span><strong>{stats.atk}</strong></div>
+          <div className="stat-compact"><span>Spd</span><strong>{stats.spd}</strong></div>
+          <div className="stat-compact"><span>Def</span><strong>{stats.def}</strong></div>
+          <div className="stat-compact"><span>Res</span><strong>{stats.res}</strong></div>
         </div>
       </div>
-      <div className="unit-tags">
-        <span>{unit.hero.weapon}</span>
-        <span>{unit.hero.rangeType}</span>
-        <span>{unit.hero.damageType}</span>
-        <span>{unit.hero.moveType}</span>
+      <div className="banner-right">
+        <div className="skill-row weapon-row">
+          <span className="icon-weapon">⚔️</span>
+          <span>{unit.hero.weapon}</span>
+        </div>
+        <div className="skill-row assist-row">
+          <span className="icon-assist">🛡️</span>
+          <span className="muted">-</span>
+        </div>
+        <div className="skill-row special-row">
+          <span className="icon-special">✨</span>
+          <span>{unit.hero.signature}</span>
+        </div>
       </div>
-      <div className="stat-grid" aria-label={`${unit.hero.name} battle stats`}>
-        <Stat label="HP" value={unit.hp} />
-        <Stat label="ATK" value={stats.atk} />
-        <Stat label="SPD" value={stats.spd} />
-        <Stat label="DEF" value={stats.def} />
-        <Stat label="RES" value={stats.res} />
-        <Stat label="RNG" value={attackRange(unit)} />
-        <Stat label="MOV" value={moveDistance(unit)} />
-      </div>
-      <p className="unit-note">{unit.hero.signature}: {unit.hero.role}</p>
     </div>
   );
 }
