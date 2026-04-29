@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import {
   BadgeInfo,
   Coins,
-  Crosshair,
+  Flag,
+  Home as HomeIcon,
   RotateCcw,
   Shield,
   ShoppingBag,
@@ -12,12 +13,12 @@ import {
 } from "lucide-react";
 import { getHero, HERO_PACK_COST } from "./game/data";
 import {
-  attackRange,
   distance,
   getBoardSize,
   getBattleStats,
   getCreditPacks,
   getTerrainAt,
+  isInAttackRange,
   localGameService,
   moveDistance
 } from "./game/localGameService";
@@ -38,6 +39,7 @@ export default function App() {
   const [battle, setBattle] = useState<BattleState | null>(null);
   const [lastPack, setLastPack] = useState<HeroInstance[]>([]);
   const teamPreview = useMemo(() => gameState.roster.slice(0, 4), [gameState.roster]);
+  const isBattleMode = screen === "battle" && battle !== null;
 
   function claimCredits(packId: string) {
     setGameState(localGameService.claimCreditPack(gameState, packId));
@@ -66,22 +68,29 @@ export default function App() {
     setScreen("home");
   }
 
+  function returnHomeFromBattle() {
+    setBattle(null);
+    setScreen("home");
+  }
+
   return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">
-          <div className="crest">AT</div>
-          <div>
-            <h1>Astral Tactics</h1>
-            <p>Covenant Arena prototype</p>
+    <div className={`app-shell ${isBattleMode ? "battle-mode" : ""}`}>
+      {!isBattleMode && (
+        <header className="topbar">
+          <div className="brand">
+            <div className="crest">AT</div>
+            <div>
+              <h1>Astral Tactics</h1>
+              <p>Covenant Arena prototype</p>
+            </div>
           </div>
-        </div>
-        <div className="wallet">
-          <Coins size={18} />
-          <strong>{gameState.credits}</strong>
-          <span>Credits</span>
-        </div>
-      </header>
+          <div className="wallet">
+            <Coins size={18} />
+            <strong>{gameState.credits}</strong>
+            <span>Credits</span>
+          </div>
+        </header>
+      )}
 
       <main>
         {screen === "home" && (
@@ -101,16 +110,19 @@ export default function App() {
             battle={battle}
             onStart={startBattle}
             onChange={setBattle}
+            onHome={returnHomeFromBattle}
           />
         )}
       </main>
 
-      <nav className="tabs" aria-label="Main">
-        <TabButton active={screen === "home"} icon={<ShoppingBag size={18} />} label="Shop" onClick={() => setScreen("home")} />
-        <TabButton active={screen === "summon"} icon={<Sparkles size={18} />} label="Packs" onClick={() => setScreen("summon")} />
-        <TabButton active={screen === "heroes"} icon={<Users size={18} />} label="Heroes" onClick={() => setScreen("heroes")} />
-        <TabButton active={screen === "battle"} icon={<Swords size={18} />} label="Battle" onClick={() => setScreen("battle")} />
-      </nav>
+      {!isBattleMode && (
+        <nav className="tabs" aria-label="Main">
+          <TabButton active={screen === "home"} icon={<ShoppingBag size={18} />} label="Shop" onClick={() => setScreen("home")} />
+          <TabButton active={screen === "summon"} icon={<Sparkles size={18} />} label="Packs" onClick={() => setScreen("summon")} />
+          <TabButton active={screen === "heroes"} icon={<Users size={18} />} label="Heroes" onClick={() => setScreen("heroes")} />
+          <TabButton active={screen === "battle"} icon={<Swords size={18} />} label="Battle" onClick={() => setScreen("battle")} />
+        </nav>
+      )}
     </div>
   );
 }
@@ -250,11 +262,13 @@ function HeroesScreen({ state }: { state: GameState }) {
 function BattleScreen({
   battle,
   onStart,
-  onChange
+  onChange,
+  onHome
 }: {
   battle: BattleState | null;
   onStart: () => void;
   onChange: (battle: BattleState) => void;
+  onHome: () => void;
 }) {
   const cpuTimerRef = useRef<number | null>(null);
 
@@ -277,44 +291,52 @@ function BattleScreen({
   }
 
   const activeBattle = battle;
-  const selected = activeBattle.units.find((unit) => unit.uid === activeBattle.selectedUid) ?? null;
-  const committedUnit = activeBattle.units.find((unit) => unit.side === "player" && unit.moved && !unit.acted);
-  const awaitingCpu =
-    activeBattle.status === "active" &&
-    activeBattle.phase === "player" &&
-    activeBattle.animation?.attackerSide === "player";
+  if (activeBattle.status !== "active") {
+    return (
+      <BattleResultScreen
+        battle={activeBattle}
+        onHome={onHome}
+        onRestart={onStart}
+      />
+    );
+  }
 
-  function finishPlayerAction(nextBattle: BattleState) {
+  const selected = activeBattle.units.find((unit) => unit.uid === activeBattle.selectedUid) ?? null;
+  function applyBattleChange(nextBattle: BattleState) {
     if (cpuTimerRef.current !== null) {
       window.clearTimeout(cpuTimerRef.current);
       cpuTimerRef.current = null;
     }
 
-    if (nextBattle.status !== "active") {
-      onChange(nextBattle);
-      return;
+    onChange(nextBattle);
+  }
+
+  function handleEndTurn() {
+    if (activeBattle.status !== "active" || activeBattle.phase !== "player") return;
+
+    if (cpuTimerRef.current !== null) {
+      window.clearTimeout(cpuTimerRef.current);
+      cpuTimerRef.current = null;
     }
 
-    if (nextBattle.animation?.attackerSide === "player") {
-      onChange(nextBattle);
-      cpuTimerRef.current = window.setTimeout(() => {
-        onChange(localGameService.runCpuPhase(nextBattle));
-        cpuTimerRef.current = null;
-      }, 760);
-      return;
+    onChange(localGameService.runCpuPhase(activeBattle));
+  }
+
+  function handleResign() {
+    if (cpuTimerRef.current !== null) {
+      window.clearTimeout(cpuTimerRef.current);
+      cpuTimerRef.current = null;
     }
 
-    onChange(localGameService.runCpuPhase(nextBattle));
+    onChange(localGameService.resignBattle(activeBattle));
   }
 
   function handleCell(pos: BoardPos) {
-    if (awaitingCpu) return;
     if (activeBattle.phase !== "player" || activeBattle.status !== "active") return;
     const unit = activeBattle.units.find((item) => item.pos.x === pos.x && item.pos.y === pos.y);
     const selectedUnit = activeBattle.units.find((item) => item.uid === activeBattle.selectedUid);
 
     if (unit?.side === "player" && !unit.acted) {
-      if (committedUnit && committedUnit.uid !== unit.uid) return;
       onChange({ ...activeBattle, selectedUid: unit.uid });
       return;
     }
@@ -322,11 +344,11 @@ function BattleScreen({
     if (!selectedUnit || selectedUnit.acted) return;
 
     if (unit && unit.side === "cpu") {
-      const isAttackable = selectedUnit.side === "player" && distance(selectedUnit.pos, unit.pos) <= attackRange(selectedUnit);
+      const isAttackable = selectedUnit.side === "player" && isInAttackRange(selectedUnit, unit.pos);
       if (isAttackable) {
         const nextBattle = localGameService.attackUnit(activeBattle, selectedUnit.uid, unit.uid);
         if (nextBattle !== activeBattle) {
-          finishPlayerAction(nextBattle);
+          applyBattleChange(nextBattle);
         }
       } else {
         onChange({ ...activeBattle, selectedUid: unit.uid });
@@ -337,7 +359,7 @@ function BattleScreen({
     if (!unit) {
       const nextBattle = localGameService.moveUnit(activeBattle, selectedUnit.uid, pos);
       if (nextBattle !== activeBattle) {
-        finishPlayerAction(nextBattle);
+        applyBattleChange(nextBattle);
       }
     }
   }
@@ -345,19 +367,50 @@ function BattleScreen({
   return (
     <section className="battle-layout">
       <div className="panel battle-panel">
-        <div className="battle-header">
-          <div>
-            <p className="eyebrow">Turn {activeBattle.turn}</p>
-            <h2>{activeBattle.status === "active" ? `${activeBattle.phase === "player" ? "Player" : "CPU"} Turn` : activeBattle.status}</h2>
-          </div>
-          <div className={`phase-pill ${activeBattle.status}`}>{activeBattle.status}</div>
-        </div>
         <UnitStatsBanner unit={selected} />
-        <BattleBoard battle={activeBattle} selected={selected} onCell={handleCell} locked={awaitingCpu} />
-        <div className="battle-actions">
-          <button className="text-action" onClick={onStart}>
-            <RotateCcw size={16} />
-            New Trial
+        <BattleBoard battle={activeBattle} selected={selected} onCell={handleCell} locked={false} />
+        <div className="battle-controls" aria-label="Battle controls">
+          <button className="battle-control resign" onClick={handleResign} disabled={activeBattle.status !== "active"}>
+            <Flag size={18} />
+            <span>Resign</span>
+          </button>
+          <button className="battle-control end-turn" onClick={handleEndTurn} disabled={activeBattle.status !== "active" || activeBattle.phase !== "player"}>
+            <RotateCcw size={18} />
+            <span>End Turn</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BattleResultScreen({
+  battle,
+  onHome,
+  onRestart
+}: {
+  battle: BattleState;
+  onHome: () => void;
+  onRestart: () => void;
+}) {
+  const didWin = battle.status === "victory";
+
+  return (
+    <section className={`battle-result ${didWin ? "victory" : "defeat"}`}>
+      <div className="battle-result-panel">
+        <p className="eyebrow">Battle Complete</p>
+        <h2>{didWin ? "You Win" : "You Lost"}</h2>
+        <p className="muted">
+          {didWin ? "The CPU squad has been routed." : "Your squad withdrew from the arena."}
+        </p>
+        <div className="battle-result-actions">
+          <button className="primary-action" onClick={onRestart}>
+            <RotateCcw size={18} />
+            Restart Match
+          </button>
+          <button className="secondary-action" onClick={onHome}>
+            <HomeIcon size={18} />
+            Back Home
           </button>
         </div>
       </div>
@@ -390,8 +443,8 @@ function BattleBoard({
         const unit = battle.units.find((item) => item.pos.x === pos.x && item.pos.y === pos.y);
         const terrain = getTerrainAt(pos);
         const blocked = terrain === "wall" || terrain === "water";
-        const reachable = selected && selected.side === "player" && !selected.acted && !unit && !blocked && distance(selected.pos, pos) <= moveDistance(selected);
-        const attackable = selected && unit?.side === "cpu" && distance(selected.pos, unit.pos) <= attackRange(selected);
+        const reachable = selected && selected.side === "player" && !selected.acted && !selected.moved && !unit && !blocked && distance(selected.pos, pos) <= moveDistance(selected);
+        const attackable = selected && unit?.side === "cpu" && isInAttackRange(selected, unit.pos);
         return (
           <button
             className={`cell terrain-${terrain} ${blocked ? "blocked" : ""} ${reachable ? "reachable" : ""} ${attackable ? "attackable" : ""}`}

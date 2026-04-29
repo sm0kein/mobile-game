@@ -35,6 +35,7 @@ export type GameService = {
   attackUnit: (battle: BattleState, attackerUid: string, defenderUid: string) => BattleState;
   waitUnit: (battle: BattleState, uid: string) => BattleState;
   runCpuPhase: (battle: BattleState) => BattleState;
+  resignBattle: (battle: BattleState) => BattleState;
   resetProgress: () => GameState;
 };
 
@@ -47,6 +48,7 @@ export const localGameService: GameService = {
   attackUnit,
   waitUnit,
   runCpuPhase,
+  resignBattle,
   resetProgress
 };
 
@@ -184,7 +186,7 @@ function startBattle(state: GameState): BattleState {
 
 function moveUnit(battle: BattleState, uid: string, pos: BoardPos): BattleState {
   const unit = battle.units.find((item) => item.uid === uid);
-  if (!unit || unit.acted || unit.side !== battle.phase || battle.status !== "active") {
+  if (!unit || unit.acted || unit.moved || unit.side !== battle.phase || battle.status !== "active") {
     return battle;
   }
   if (!isInsideBoard(pos) || isBlocked(pos) || isOccupied(battle, pos) || distance(unit.pos, pos) > moveDistance(unit)) {
@@ -205,7 +207,7 @@ function attackUnit(battle: BattleState, attackerUid: string, defenderUid: strin
   if (!attacker || !defender || attacker.acted || attacker.side !== battle.phase || attacker.side === defender.side) {
     return battle;
   }
-  if (distance(attacker.pos, defender.pos) > attackRange(attacker)) {
+  if (!isInAttackRange(attacker, defender.pos)) {
     return battle;
   }
 
@@ -250,7 +252,7 @@ function attackUnit(battle: BattleState, attackerUid: string, defenderUid: strin
       ko
     },
     units: nextUnits,
-    selectedUid: nextUnits.some(u => u.uid === battle.selectedUid) ? battle.selectedUid : nextUnits.find((item) => item.side === battle.phase && !item.acted)?.uid ?? null,
+    selectedUid: nextUnits.find((item) => item.side === battle.phase && !item.acted)?.uid ?? null,
     log,
     status
   };
@@ -265,7 +267,7 @@ function waitUnit(battle: BattleState, uid: string): BattleState {
     ...battle,
     animation: null,
     units: battle.units.map((item) => (item.uid === uid ? { ...item, acted: true, moved: true } : item)),
-    selectedUid: battle.units.some(u => u.uid === battle.selectedUid) ? battle.selectedUid : battle.units.find((item) => item.side === battle.phase && !item.acted && item.uid !== uid)?.uid ?? null,
+    selectedUid: battle.units.find((item) => item.side === battle.phase && !item.acted && item.uid !== uid)?.uid ?? null,
     log: addLog(battle.log, `${unit.hero.name} waits.`, "info")
   };
 }
@@ -281,20 +283,21 @@ function runCpuPhase(battle: BattleState): BattleState {
     log: addLog(battle.log, "CPU turn begins.", "info")
   };
 
-  const cpu = chooseCpuUnit(nextBattle);
-  if (cpu) {
+  let cpu = chooseCpuUnit(nextBattle);
+  while (cpu && nextBattle.status === "active") {
     const target = findNearestEnemy(nextBattle, cpu);
-    if (target && distance(cpu.pos, target.pos) > attackRange(cpu)) {
+    if (target && !isInAttackRange(cpu, target.pos)) {
       nextBattle = moveCpuToward(nextBattle, cpu, target.pos);
     }
 
     const movedCpu = nextBattle.units.find((item) => item.uid === cpu.uid);
     const currentTarget = movedCpu ? findNearestEnemy(nextBattle, movedCpu) : null;
-    if (movedCpu && currentTarget && distance(movedCpu.pos, currentTarget.pos) <= attackRange(movedCpu)) {
+    if (movedCpu && currentTarget && isInAttackRange(movedCpu, currentTarget.pos)) {
       nextBattle = attackUnit(nextBattle, movedCpu.uid, currentTarget.uid);
     } else if (movedCpu) {
       nextBattle = waitUnit(nextBattle, movedCpu.uid);
     }
+    cpu = chooseCpuUnit(nextBattle);
   }
 
   if (nextBattle.status !== "active") {
@@ -313,6 +316,17 @@ function runCpuPhase(battle: BattleState): BattleState {
   };
 }
 
+function resignBattle(battle: BattleState): BattleState {
+  if (battle.status !== "active") return battle;
+
+  return {
+    ...battle,
+    animation: null,
+    status: "defeat",
+    log: addLog(battle.log, "Trial resigned. Your squad withdraws.", "ko")
+  };
+}
+
 export function moveDistance(unit: BattleUnit) {
   if (unit.hero.moveType === "Cavalry") return 3;
   if (unit.hero.moveType === "Armored") return 1;
@@ -321,6 +335,12 @@ export function moveDistance(unit: BattleUnit) {
 
 export function attackRange(unit: BattleUnit) {
   return unit.hero.rangeType === "Melee" ? 1 : 2;
+}
+
+export function isInAttackRange(unit: BattleUnit, target: BoardPos) {
+  if (unit.pos.x !== target.x && unit.pos.y !== target.y) return false;
+  const range = distance(unit.pos, target);
+  return range > 0 && range <= attackRange(unit);
 }
 
 export function distance(a: BoardPos, b: BoardPos) {
@@ -404,7 +424,7 @@ function findNearestEnemy(battle: BattleState, unit: BattleUnit) {
 }
 
 function chooseCpuUnit(battle: BattleState) {
-  const cpuUnits = battle.units.filter((item) => item.side === "cpu");
+  const cpuUnits = battle.units.filter((item) => item.side === "cpu" && !item.acted);
   return cpuUnits
     .map((unit) => ({
       unit,

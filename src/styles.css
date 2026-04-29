@@ -520,6 +520,128 @@ button {
     radial-gradient(circle at 50% 0%, rgba(255, 209, 102, 0.16), transparent 24rem);
 }
 
+.battle-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 74px);
+  justify-content: center;
+  gap: 14px;
+  width: min(100%, 640px);
+  margin: 8px auto 0;
+  padding: 2px 0 4px;
+}
+
+.battle-control {
+  position: relative;
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 2px;
+  border: 0;
+  clip-path: polygon(17% 0, 83% 0, 100% 25%, 100% 75%, 83% 100%, 17% 100%, 0 75%, 0 25%);
+  padding: 9px 8px 8px;
+  color: #eefdff;
+  background:
+    linear-gradient(180deg, rgba(185, 245, 255, 0.32), transparent 34%),
+    linear-gradient(180deg, #336a78 0%, #1d4d64 54%, #14334b 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(233, 255, 255, 0.72),
+    inset 0 -5px 0 rgba(0, 0, 0, 0.26),
+    0 5px 0 rgba(6, 20, 35, 0.86),
+    0 9px 16px rgba(0, 0, 0, 0.36);
+  font-size: 0.65rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  text-transform: uppercase;
+}
+
+.battle-control::before {
+  position: absolute;
+  inset: 5px;
+  clip-path: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  content: "";
+  pointer-events: none;
+}
+
+.battle-control svg,
+.battle-control span {
+  position: relative;
+  z-index: 1;
+}
+
+.battle-control.resign {
+  color: #fff1f5;
+  background:
+    linear-gradient(180deg, rgba(255, 210, 226, 0.34), transparent 34%),
+    linear-gradient(180deg, #914a6b 0%, #663552 54%, #3c243d 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 225, 239, 0.7),
+    inset 0 -5px 0 rgba(0, 0, 0, 0.28),
+    0 5px 0 rgba(35, 10, 28, 0.86),
+    0 9px 16px rgba(0, 0, 0, 0.36);
+}
+
+.battle-control:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+  opacity: 0.58;
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 0 0 2px rgba(233, 255, 255, 0.35),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.22),
+    0 2px 0 rgba(6, 20, 35, 0.86);
+}
+
+.battle-result {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  padding: 18px;
+}
+
+.battle-result-panel {
+  width: min(100%, 360px);
+  border: 1px solid rgba(255, 234, 178, 0.32);
+  border-radius: 8px;
+  padding: 22px 18px;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(39, 47, 70, 0.96), rgba(14, 19, 31, 0.98)),
+    radial-gradient(circle at 50% 0%, rgba(255, 230, 160, 0.2), transparent 14rem);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.46), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.battle-result.victory .battle-result-panel {
+  border-color: rgba(156, 255, 203, 0.42);
+}
+
+.battle-result.defeat .battle-result-panel {
+  border-color: rgba(255, 108, 125, 0.42);
+}
+
+.battle-result h2 {
+  margin-top: 6px;
+  font-size: 2.15rem;
+}
+
+.battle-result p {
+  margin: 10px 0 0;
+}
+
+.battle-result-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.battle-result-actions button {
+  width: 100%;
+  justify-content: center;
+}
+
 .battle-header {
   display: flex;
   align-items: center;
@@ -1131,6 +1253,46 @@ main {
   overflow: auto;
   padding-top: 10px;
   padding-bottom: 10px;
+}
+
+.app-shell.battle-mode {
+  grid-template-rows: minmax(0, 1fr);
+  padding: 6px;
+}
+
+.app-shell.battle-mode main {
+  overflow: hidden;
+  padding: 0;
+}
+
+.app-shell.battle-mode .battle-layout {
+  height: 100%;
+}
+
+.app-shell.battle-mode .battle-panel {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.app-shell.battle-mode .battle-panel::after {
+  display: none;
+}
+
+.app-shell.battle-mode .board {
+  flex: 1;
+  min-height: 0;
+  max-height: 100%;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 6 / 8;
 }
 
 .screen-grid,
